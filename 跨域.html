@@ -1,0 +1,79 @@
+<!-- 同源是浏览器的一种安全策略，所谓同源是指，域名，协议，端口完全相同，而不同源就是跨域。 -->
+
+<!-- 1. document.domain 我们只能把document.domain设置成自身或更高一级的父域，且顶级域名必须相同-->
+<body>
+    <p>我是父窗口study.com的内容</p>
+    <iframe id="iframe" src="http://api.study.com/domain.html" frameborder="0">
+    </iframe>
+    <script>
+        // 这种情况适合 顶级域名相同的情况
+        document.domain = 'study.com';
+
+        var iframe = document.getElementById('iframe');
+
+        iframe.onload = function () {
+            var contentWin = iframe.contentWindow;
+
+            contentWin.document.getElementById('txt').style.color = 'red';
+        }
+    </script>
+</body>
+
+<!-- 2. window.name window.name是持久存在一个窗口载入过的所有页面中的，并不会因新页面的的载入而进行重置-->
+<body>
+    <p id="txt">我是api.study.com域下的一个页面</p>
+    <script>
+        window.name = 400;
+    </script>
+</body>
+
+<!-- 3. location.hash 用location.href=url就可以直接将页面重定向url。而location.hash则可以用来获取或设置页面的标签值。比如http://domain/#admin的location.hash="#admin" -->
+
+<!-- 4. window.postMessage(message,targetOrigin) 传递参数的时候需要使用JSON.stringify()方法对对象参数序列化-->
+<body>
+    <iframe id="iframe" src="http://api.study.com/postmessage.html" frameborder="0">
+    </iframe>
+
+    <script>
+        var iframe = document.getElementById('iframe');
+
+        iframe.onload = function () {
+            // 向哪个域下传值
+            iframe.contentWindow.postMessage('red', 'http://api.study.com');
+        }
+    </script>
+</body>
+
+<body>
+    <p id="txt">我是api.study.com域下的一个页面</p>
+    <script>
+        window.addEventListener('message', function(ev) {
+            document.getElementById('txt').style.color = ev.data;
+        });
+    </script>
+</body>
+
+<!-- 5. JSONP 而jsonp的本质就是利用了script标签的可跨域的特性，由服务端返回一个预先定义好的Javascript函数的调用，并且将服务器数据以该函数参数的形式传递过来，此方法需要前后端配合完成 -->
+<script>
+    function fuck(data){
+        var data = JSON.parse(data);
+        console.log(data);
+    }
+</script>
+<script src="http://api.study.com/jsonp.php?callback=fuck"></script>
+
+$.ajax({
+    type:'get',
+    url:'http://api.study.com/jquery_jsonp.php',
+    dataType:'jsonp',
+    jsonp:'callback',
+    success:function(data){
+        console.log(data);
+    }
+});
+
+<!-- 6. 跨域资源共享 CORS提供了一种跨域请求方案，但没有为安全访问提供足够的保障机制，如果你需要信息的绝对安全，不要依赖CORS当中的权限制度，应当使用更多其它的措施来保障。
+
+ -->
+Access-Control-Allow-Origin: http://example.com
+Access-Control-Allow-Credentials: true（可选）
